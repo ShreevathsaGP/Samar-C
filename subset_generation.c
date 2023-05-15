@@ -6,6 +6,7 @@
 typedef struct all_subsets_node
 {
     int* subset;
+    int size;
     struct all_subsets_node* link;
 }ALL_SUBSETS;
 
@@ -32,7 +33,7 @@ void display(ALL_SUBSETS* head)
     while (head != NULL)
     {
         int* arr = head -> subset;
-        int size = sizeof(arr)/sizeof(arr[0]);
+        int size = head -> size;
 
         for(int loop = 0; loop < size; loop++)
         {
@@ -84,6 +85,8 @@ SUBSET* deleteFrontInt(SUBSET* head)
 
 
 /*----------------------------------------------------------------------------*/
+// initialising a global variable to store the size of the array we calculate here
+int size_of_subset = 0;
 // we need a function to convert a linked list to an array
 int* list_to_array(SUBSET* head)
 {
@@ -95,6 +98,8 @@ int* list_to_array(SUBSET* head)
         head_copy = head_copy -> link;
         size++;
     }
+
+    size_of_subset = size;
 
     // converting list to array
     int* arr = (int*)malloc(size*sizeof(int));
@@ -112,23 +117,6 @@ int* list_to_array(SUBSET* head)
 
 
 /*----------------------------------------------------------------------------*/
-// we need a function which takes input array and outputs a copy of the array at another location
-int* copy(int* ptr)
-{
-    int size = sizeof(ptr)/sizeof(int);
-    int* doppleganger = (int*)malloc(size);
-
-    for(int loop = 0; loop < size; loop++)
-    {
-        doppleganger[loop] = ptr[loop];
-    }
-
-    return doppleganger;
-}
-/*----------------------------------------------------------------------------*/
-
-
-/*----------------------------------------------------------------------------*/
 void search(int k)
 {
     if (k == 4)
@@ -137,6 +125,7 @@ void search(int k)
         int* cur_sub = list_to_array(subset);
         // Adding cur_sub to final output ALL_SUBSETS
         all_subsets = insertFrontArr(all_subsets, cur_sub);
+        all_subsets -> size = size_of_subset;
     }
     else
     {
