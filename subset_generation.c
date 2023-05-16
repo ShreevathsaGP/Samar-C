@@ -1,148 +1,173 @@
+/* Generate all subsets of in range(n): */
+/*     Example: */
+/*     n = 2 */
+/*     subsets = [[1, 2]], [1], [2], []] */
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
 
+// ---------------------------------------------------------------------------------------------------------------
+typedef struct Subset {
+    int maxSize; // maxSize (usually n)
+    int currentSize;
+    int array[]; // FAM
+} SUBSET;
 
-/*----------------------------------------------------------------------------*/
-typedef struct all_subsets_node
-{
-    int* subset;
-    int size;
-    struct all_subsets_node* link;
-}ALL_SUBSETS;
+SUBSET *makeSubset(int maxSize) {
+    SUBSET *newSubset = malloc(sizeof(SUBSET) + maxSize * sizeof(int));
+    newSubset -> maxSize = maxSize;
+    newSubset -> currentSize = 0;
 
-ALL_SUBSETS* all_subsets; // creating an instance of struct all_subsets_node
-
-ALL_SUBSETS* createNodeArr(int* data)
-{
-    ALL_SUBSETS* newNode = (ALL_SUBSETS*)malloc(sizeof(ALL_SUBSETS));
-    newNode -> subset = data;
-    newNode -> link = NULL;
-    return newNode;
-}
-
-ALL_SUBSETS* insertFrontArr(ALL_SUBSETS* head, int* data)
-{
-    ALL_SUBSETS* newNode = createNodeArr(data);
-    newNode -> link = head;
-    head = newNode;
-    return head;
-}
-
-void display(ALL_SUBSETS* head)
-{
-    while (head != NULL)
-    {
-        int* arr = head -> subset;
-        int size = head -> size;
-
-        for(int loop = 0; loop < size; loop++)
-        {
-            printf("%d ", arr[loop]);
-        }
-
-        printf("\n\n");
-
-        head = head->link;
-    }
-}
-/*----------------------------------------------------------------------------*/
-
-
-/*----------------------------------------------------------------------------*/
-typedef struct subset
-{
-    int data;
-    struct subset* link;
-}SUBSET;
-
-SUBSET* subset; // creating an instance of struct subset
-
-SUBSET* createNodeInt(int data)
-{
-    SUBSET* newNode = (SUBSET*)malloc(sizeof(SUBSET));
-    newNode -> data = data;
-    newNode -> link = NULL;
-    return newNode;
-}
-
-SUBSET* insertFrontInt(SUBSET* head, int data)
-{
-    SUBSET* newNode = createNodeInt(data);
-    newNode -> link = head;
-    head = newNode;
-    return head;
-}
-
-SUBSET* deleteFrontInt(SUBSET* head)
-{
-    SUBSET* next = head -> link;
-    free(head);
-    head = NULL;
-    head = next;
-    return head;
-}
-/*----------------------------------------------------------------------------*/
-
-
-/*----------------------------------------------------------------------------*/
-// initialising a global variable to store the size of the array we calculate here
-int size_of_subset = 0;
-// we need a function to convert a linked list to an array
-int* list_to_array(SUBSET* head)
-{
-    // Parsing through the list to find out the required size of our array
-    int size = 0;
-    SUBSET* head_copy = head;
-    while(head_copy != NULL)
-    {
-        head_copy = head_copy -> link;
-        size++;
+    // init arrray
+    for (int i = 0; i < maxSize; i++) {
+        newSubset -> array[i] = -1;
     }
 
-    size_of_subset = size;
+    return newSubset;
+}
 
-    // converting list to array
-    int* arr = (int*)malloc(size*sizeof(int));
-    int count = 0;
-    while (head != NULL)
-    {
-        arr[count] = head -> data;
-        head = head->link;
-        count++;
+void freeSubset(SUBSET *s) {
+    free(s);
+}
+
+void printSubset(SUBSET *subset, char endChar[1]) {
+    printf("[");
+    for (int i = 0; i < subset -> currentSize; i++) {
+        printf("%d", subset -> array[i]);
+
+        if (i < subset -> currentSize - 1) { printf(", "); }
+    }
+    printf("]");
+    printf("%s", endChar);
+}
+
+bool subsetFull(SUBSET *s) { return (s -> currentSize == s -> maxSize); } // is subset full?
+bool subsetEmpty(SUBSET *s) { return (s -> currentSize == 0); } // is subset empty?
+
+bool subsetAppend(SUBSET *s, int value) {
+    if (subsetFull(s)) { return false; }
+
+    s -> array[s -> currentSize] = value;
+    s -> currentSize++;
+
+    return true;
+}
+
+int subsetPop(SUBSET *s) {
+    if (subsetEmpty(s)) { return -1; }
+
+    return s -> array[--(s -> currentSize)];
+}
+
+SUBSET *copySubset(SUBSET *s) {
+    SUBSET *newS = makeSubset(s -> maxSize);
+    newS -> currentSize = s -> currentSize;
+
+    for (int i = 0; i < s -> currentSize; i++) {
+        newS -> array[i] = s -> array[i];
     }
 
-    return arr;
+    return newS;
 }
-/*----------------------------------------------------------------------------*/
 
+// ---------------------------------------------------------------------------------------------------------------
 
-/*----------------------------------------------------------------------------*/
-void search(int k)
-{
-    if (k == 4)
-    {
-        // Converting current subset from a linked list to an array
-        int* cur_sub = list_to_array(subset);
-        // Adding cur_sub to final output ALL_SUBSETS
-        all_subsets = insertFrontArr(all_subsets, cur_sub);
-        all_subsets -> size = size_of_subset;
+// ---------------------------------------------------------------------------------------------------------------
+typedef struct SubsetListNode {
+    SUBSET *subset;
+    struct SubsetListNode *next;
+
+} SUBSET_LIST; // head node of linked list of subsets
+
+SUBSET_LIST *makeSubsetList() {
+    SUBSET_LIST *newList = malloc(sizeof(SUBSET_LIST));
+
+    // init pointers
+    newList -> subset = NULL; 
+    newList -> next = NULL;
+
+    return newList;
+}
+
+SUBSET_LIST *makeNode() { return makeSubsetList(); }
+
+void freeSubsetList(SUBSET_LIST *head) {
+    SUBSET_LIST *current = head;
+    SUBSET_LIST *temp = NULL;
+
+    while (current != NULL) {
+        temp = current -> next;
+
+        if (current -> subset != NULL) { freeSubset(current -> subset); }
+        free(current);
+
+        current = temp;
     }
-    else
-    {
-        // add k to the subset
-        subset = insertFrontInt(subset, k);
-        search(k + 1);
-        // remove k from the subset
-        subset = deleteFrontInt(subset);
-        search(k + 1);
+}
+
+void addSubset(SUBSET_LIST *head, SUBSET *subset) {
+    SUBSET_LIST *current = head;
+    
+    // if head does not have a subset
+    if (current -> subset == NULL) { current -> subset = subset; return; }
+
+    while (current -> next != NULL) { current = current -> next; }
+
+    current -> next = makeNode();
+    current -> next -> subset = subset;
+}
+
+void printSubsetList(SUBSET_LIST *head) {
+    SUBSET_LIST *current = head;
+
+    printf("[");
+    while (current != NULL) {
+        if (current -> subset != NULL) {
+            printSubset(current -> subset, "");
+        } else {  }
+
+        if (current -> next != NULL) { printf(", "); }
+
+        current = current -> next;
+    }
+
+    printf("]\n");
+
+};
+// ---------------------------------------------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------------------------------------------
+// generate all subsets in range [1, n]
+void generateSubsets(SUBSET_LIST *list, SUBSET *subset, int n, int k) {
+
+    if (k == (n + 1)) { 
+        addSubset(list, copySubset(subset));
+    } else {
+        subsetAppend(subset, k);
+        generateSubsets(list, subset, n, k + 1);
+        subsetPop(subset);
+        generateSubsets(list, subset, n, k + 1);
     }
 }
-/*----------------------------------------------------------------------------*/
+// ---------------------------------------------------------------------------------------------------------------
 
+int main() {
+    int n = 3;
 
-/*----------------------------------------------------------------------------*/
-void main()
-{
-    search(1);
-    display(all_subsets);
+    SUBSET_LIST *list = makeSubsetList();
+    SUBSET *subset = makeSubset(n); // the subset that is edited and copied on each recursive call
+
+    // generate all subsets in range(n)
+    generateSubsets(list, subset, n, 1);
+
+    printSubsetList(list);
+
+    // deallocate
+    freeSubsetList(list);
+    freeSubset(subset);
+
+    return 0;
 }
+
