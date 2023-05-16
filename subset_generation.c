@@ -153,8 +153,11 @@ void generateSubsets(SUBSET_LIST *list, SUBSET *subset, int n, int k) {
 }
 // ---------------------------------------------------------------------------------------------------------------
 
-int main() {
-    int n = 3;
+int main(int argc, char* argv[]) {
+
+    if (argc < 2) { printf("Usage: ./program <n>\n"); }
+
+    int n = atoi(argv[1]);
 
     SUBSET_LIST *list = makeSubsetList();
     SUBSET *subset = makeSubset(n); // the subset that is edited and copied on each recursive call
